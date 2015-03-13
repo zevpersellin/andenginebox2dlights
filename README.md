@@ -1,4 +1,5 @@
 # andenginebox2dlights
+NOTE: This is not yet released, we are looking for supporters.
 This is a andengine extension for lights with box2d.
 
 As part of this project, we should have lights generally working in andengine.  
