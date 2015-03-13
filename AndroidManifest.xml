@@ -11,7 +11,7 @@
     <application
             android:label="Andengine Lights">
         <activity                
-                android:name="com.andengine.lights.LightsTestActivity"
+                android:name="com.andengine.lights.GlowShaderTestActivity"
                 android:enabled="true" 
                 android:screenOrientation="landscape" 
                 android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|mcc|mnc|layoutDirection|locale|touchscreen|navigation|fontScale">
