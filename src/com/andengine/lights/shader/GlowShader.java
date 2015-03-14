@@ -1,4 +1,4 @@
-GlowShaderTestActivity.javaGlowShaderTestActivity.javapackage com.andengine.lights.shader;
+package com.andengine.lights.shader;
 
 import org.andengine.opengl.shader.ShaderProgram;
 import org.andengine.opengl.shader.PositionTextureCoordinatesShaderProgram;
@@ -16,39 +16,34 @@ import android.opengl.GLES20;
  */
 public class GlowShader extends ShaderProgram {
     
-    private static GlowShader INSTANCE;
-    
-    private float mCentreX, mCentreY, mRadius;
+    private float mCentreX, mCentreY, mRadius, mScreenHeight, mIntensity;
     
     private static final String UNIFORM_DATA = "u_data";
+    private static final String UNIFORM_INTENSITY = "intensity";
     public static int sUniformData = ShaderProgramConstants.LOCATION_INVALID;
+    public static int iUniformData = ShaderProgramConstants.LOCATION_INVALID;
     
     
     static IShaderSource mVertexShaderSource = new StringShaderSource(
             "attribute vec4 " + ShaderProgramConstants.ATTRIBUTE_POSITION
-                    + ";\n" + "attribute vec2 "
-                    + ShaderProgramConstants.ATTRIBUTE_TEXTURECOORDINATES
                     + ";\n"
                     + "uniform mat4 "
-                    + ShaderProgramConstants.UNIFORM_MODELVIEWPROJECTIONMATRIX
-                    + ";\n" + "varying vec2 vTexCoord1;\n"
+                    + ShaderProgramConstants.UNIFORM_MODELVIEWPROJECTIONMATRIX + ";\n"
                     + "varying vec4 vPosition;\n"
                     + "void main(void) {\n" + "vPosition = "
                     + ShaderProgramConstants.ATTRIBUTE_POSITION + ";\n"
-                    + "vTexCoord1 = "
-                    + ShaderProgramConstants.ATTRIBUTE_TEXTURECOORDINATES
-                    + ";\n"
                     + "gl_Position = "
                     + ShaderProgramConstants.UNIFORM_MODELVIEWPROJECTIONMATRIX
                     + " * vPosition;\n" + "}");
     
     static IShaderSource mFragmentShaderSource = new StringShaderSource("precision highp float;" +
-    		"\n uniform vec3 u_data;" +
+    		"\n uniform vec4 u_data;" +
+    		"\n uniform float intensity;" +
     		"\n void main()\n " +
-    		"{ \n vec2 lightpos = vec2(u_data.x, -(u_data.y-720.0));" +
+    		"{ \n vec2 lightpos = vec2(u_data.x, -(u_data.y-u_data.w));" +
     		"\n vec4 lightColor = vec4(1.0,1.0,1.0,1.0);\n " +
-    		"float screenHeight = 720.0;\n " +
-    		"vec3 lightAttenuation = vec3(1.0,1.0,1.0);\n " +
+    		"float screenHeight = u_data.w;\n " +
+    		"vec3 lightAttenuation = vec3(1.0,1.0,1.0) * intensity;\n " +
     		"vec2 pixel=gl_FragCoord.xy;\n " +
     		"pixel.y=screenHeight-pixel.y;\n " +
     		"vec2 aux=lightpos-pixel;\n " +
@@ -57,26 +52,23 @@ public class GlowShader extends ShaderProgram {
     		"vec4 color=vec4(attenuation,attenuation,attenuation,1.0)*lightColor;\n gl_FragColor = color;\n }");
     
     
-    public GlowShader() {
+    public GlowShader(float screenHeight) {
         super(mVertexShaderSource, mFragmentShaderSource);
+        setScreenHeight(screenHeight);
     }
 
     @Override
     protected void link(final GLState pGLState)
             throws ShaderProgramLinkException {
 
-        GLES20.glBindAttribLocation(this.mProgramID,
-                ShaderProgramConstants.ATTRIBUTE_POSITION_LOCATION,
-                ShaderProgramConstants.ATTRIBUTE_POSITION);
+        GLES20.glBindAttribLocation(this.mProgramID, ShaderProgramConstants.ATTRIBUTE_POSITION_LOCATION, ShaderProgramConstants.ATTRIBUTE_POSITION);
 
-        GLES20.glBindAttribLocation(this.mProgramID, ShaderProgramConstants.ATTRIBUTE_TEXTURECOORDINATES_LOCATION, ShaderProgramConstants.ATTRIBUTE_TEXTURECOORDINATES);
-        
         super.link(pGLState);
 
-        PositionTextureCoordinatesShaderProgram.sUniformModelViewPositionMatrixLocation = this
-                .getUniformLocation(ShaderProgramConstants.UNIFORM_MODELVIEWPROJECTIONMATRIX);
+        PositionTextureCoordinatesShaderProgram.sUniformModelViewPositionMatrixLocation = this.getUniformLocation(ShaderProgramConstants.UNIFORM_MODELVIEWPROJECTIONMATRIX);
         
         GlowShader.sUniformData = this.getUniformLocation(GlowShader.UNIFORM_DATA);
+        GlowShader.iUniformData = this.getUniformLocation(GlowShader.UNIFORM_INTENSITY);
     }
 
     @Override
@@ -84,18 +76,10 @@ public class GlowShader extends ShaderProgram {
             final VertexBufferObjectAttributes pVertexBufferObjectAttributes) {
         super.bind(pGLState, pVertexBufferObjectAttributes);
 
-        GLES20.glUniformMatrix4fv(
-                PositionTextureCoordinatesShaderProgram.sUniformModelViewPositionMatrixLocation,
-                1, false, pGLState.getModelViewProjectionGLMatrix(), 0);
+        GLES20.glUniformMatrix4fv(PositionTextureCoordinatesShaderProgram.sUniformModelViewPositionMatrixLocation, 1, false, pGLState.getModelViewProjectionGLMatrix(), 0);
         
-        GLES20.glUniform3f(GlowShader.sUniformData, mCentreX, mCentreY, mRadius);
-    }
-
-    public static GlowShader getInstance() {
-        if(GlowShader.INSTANCE == null) {
-        	GlowShader.INSTANCE = new GlowShader();
-        }
-        return GlowShader.INSTANCE;
+        GLES20.glUniform4f(GlowShader.sUniformData, mCentreX, mCentreY, mRadius, mScreenHeight);
+        GLES20.glUniform1f(GlowShader.iUniformData, mIntensity);
     }
     
     public void setCentre(float pX, float pY){
@@ -105,6 +89,14 @@ public class GlowShader extends ShaderProgram {
     
     public void setRadius(float pRadius){
         mRadius = pRadius;
+    }
+    
+    public void setIntensity(float intensity){
+    	mIntensity = intensity;
+    }
+    
+    protected void setScreenHeight(float height){
+    	mScreenHeight = height;
     }
 
 }
