@@ -73,7 +73,7 @@ public class GlowShaderTestActivity extends BaseGameActivity implements IOnScene
 	{	
         
         Rectangle rec = new Rectangle(CAMERA_WIDTH / 2, CAMERA_HEIGHT / 2, CAMERA_WIDTH, CAMERA_HEIGHT, getVertexBufferObjectManager());
-        rec.setColor(Color.BLUE);
+        rec.setColor(Color.TRANSPARENT);
         rec.setShaderProgram(mGlowShader);
         rec.setZIndex(11);
         rec.setBlendFunction(1,1);
